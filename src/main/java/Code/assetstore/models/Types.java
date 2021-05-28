@@ -1,0 +1,31 @@
+package Code.assetstore.models;
+
+import java.util.Set;
+
+public class Types {
+    private String name;
+    private String content;
+
+    public Types(){}
+
+    public Types(String name, String content) {
+        this.name = name;
+        this.content = content;
+    }
+
+    public String getName(){
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getContent(){
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
