@@ -1,6 +1,5 @@
 package Code.assetstore.controllers;
 
-
 import Code.assetstore.models.Assets;
 import Code.assetstore.models.User;
 import Code.assetstore.payloads.MessageResponse;
@@ -21,7 +20,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -65,37 +66,6 @@ public class PaymentController {
             ses.add(session.getId());
             newUser.setSessions(ses);
             userRepository.save(newUser);
-            TimerTask timerTask = new TimerTask() {
-
-                @Override
-                public void run() {
-                    PaymentIntent pay = null;
-                    try {
-                        pay = PaymentIntent.retrieve(session.getPaymentIntent());
-                    } catch (StripeException e) {
-                        e.printStackTrace();
-                    }
-                    assert pay != null;
-                    if(pay.getStatus().equals("requires_payment_method")){
-                        pay.setStatus("canceled");
-                        for(int i = 0; i < newUser.getSessions().size(); i++){
-                            if(newUser.getSessions().get(i).equals(session.getId())){
-                                List<String> nesList = new ArrayList<>();
-                                nesList = newUser.getSessions();
-                                nesList.remove(i);
-                                User user = newUser;
-                                user.setSessions(nesList);
-                                userRepository.save(user);
-                                break;
-                            }
-                        }
-                    }
-                }
-            };
-
-            Timer timer = new Timer("SessinOverTime");//create a new Timer
-
-            timer.scheduleAtFixedRate(timerTask, 30, 60000);
             return new MessageResponse(session.getId());
         } catch (StripeException e) {
             e.printStackTrace();
