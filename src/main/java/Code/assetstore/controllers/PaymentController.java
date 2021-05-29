@@ -49,9 +49,9 @@ public class PaymentController {
                     .build());
             SessionCreateParams.LineItem item1 = SessionCreateParams.LineItem.builder().setPrice(price.getId()).setQuantity(1L).build();
             SessionCreateParams param = SessionCreateParams.builder().
-                    setCancelUrl("http://localhost:4200/assets").
+                    setCancelUrl("http://assetstore.herokuapp.com/assets").
                     setMode(SessionCreateParams.Mode.PAYMENT).
-                    setSuccessUrl("http://localhost:4200/successPayment").
+                    setSuccessUrl("http://assetstore.herokuapp.com/successPayment").
                     addLineItem(item1).
                     setClientReferenceId(user.get().getId()).
                     putMetadata("assetId", assetId).
