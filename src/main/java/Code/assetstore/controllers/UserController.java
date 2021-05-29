@@ -3,6 +3,7 @@ package Code.assetstore.controllers;
 import Code.assetstore.models.Assets;
 import Code.assetstore.models.User;
 import Code.assetstore.payloads.EditUserRequest;
+import Code.assetstore.payloads.MessageResponse;
 import Code.assetstore.repository.UserRepository;
 import Code.assetstore.security.services.AssetService;
 import Code.assetstore.security.services.UserDetailsImpl;
@@ -42,20 +43,40 @@ public class UserController {
         return user;
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/update/{userId}")
     public ResponseEntity<?> getUserByToken(@RequestBody EditUserRequest user, @PathVariable(name = "userId") String userId){
-        Optional<User>userOld =  userRepository.findById(userId);
-        if(userOld == null){
+        Optional<User>userOld;
+        if(userId.equals("0")){
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            userOld = userRepository.findById(userDetails.getId());
+            System.out.print("yse");
+        }else {
+            userOld = userRepository.findById(userId);
+        }
+        if(!userOld.isPresent()){
             return ResponseEntity.notFound().build();
         }
         User newUser = userOld.get();
-        newUser.setId(userId);
-        userRepository.deleteById(userId);
         if(user.getUsername() != null){
-            newUser.setUsername(user.getUsername());
+            if(userRepository.existsByUsername(user.getUsername())) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Такое имя уже занято"));
+            }else{
+                newUser.setUsername(user.getUsername());
+            }
+
         }
         if(user.getEmail() != null){
-            newUser.setEmail(user.getEmail());
+            if(userRepository.existsByEmail(user.getUsername())) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Этот email уже используется"));
+            }else {
+                newUser.setEmail(user.getEmail());
+            }
         }
 
         if(user.getPassword() != null){
