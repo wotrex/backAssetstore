@@ -66,6 +66,35 @@ public class PaymentController {
             ses.add(session.getId());
             newUser.setSessions(ses);
             userRepository.save(newUser);
+            TimerTask timerTask = new TimerTask() {
+
+                @Override
+                public void run() {
+                    PaymentIntent pay = null;
+                    try {
+                        pay = PaymentIntent.retrieve(session.getPaymentIntent());
+                    } catch (StripeException e) {
+                        e.printStackTrace();
+                    }
+                    assert pay != null;
+                    if(pay.getStatus().equals("requires_payment_method")){
+                        pay.setStatus("canceled");
+                        for(int i = 0; i < newUser.getSessions().size(); i++){
+                            if(newUser.getSessions().get(i).equals(session.getId())){
+                                List<String> nesList;
+                                nesList = newUser.getSessions();
+                                nesList.remove(i);
+                                User user = newUser;
+                                user.setSessions(nesList);
+                                userRepository.save(user);
+                                break;
+                            }
+                        }
+                    }
+                }
+            };
+            Timer timer = new Timer("SessionOverTime");//create a new Timer
+            timer.schedule(timerTask, 60000);
             return new MessageResponse(session.getId());
         } catch (StripeException e) {
             e.printStackTrace();
@@ -84,8 +113,6 @@ public class PaymentController {
         if (newUser.getSessions() != null) {
             for (int i = 0; i < newUser.getSessions().size(); i++) {
                 Session session = Session.retrieve(newUser.getSessions().get(i));
-                PaymentIntent pay = PaymentIntent.retrieve(session.getPaymentIntent());
-                System.out.print(pay);
                 if (session.getPaymentStatus().equals("paid")) {
                     List<String> items = new ArrayList<>();
                     if (newUser.getItems() != null) {
