@@ -100,7 +100,7 @@ public class PaymentController {
                 }
             };
             Timer timer = new Timer("SessionOverTime");//create a new Timer
-            timer.schedule(timerTask, 60000);
+            timer.schedule(timerTask, 3600000);
             return new MessageResponse(session.getId());
         } catch (StripeException e) {
             e.printStackTrace();
