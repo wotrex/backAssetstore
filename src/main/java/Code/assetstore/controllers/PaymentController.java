@@ -93,7 +93,7 @@ public class PaymentController {
                 }
             };
 
-            Timer timer = new Timer("SessinOverTime");//create a new Timer
+            Timer timer = new Timer("SessionsOverTime");//create a new Timer
 
             timer.scheduleAtFixedRate(timerTask, 30, 60000);
             return new MessageResponse(session.getId());
