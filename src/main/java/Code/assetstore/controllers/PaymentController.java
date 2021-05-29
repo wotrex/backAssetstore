@@ -80,7 +80,11 @@ public class PaymentController {
                     }
                     assert pay != null;
                     if(pay.getStatus().equals("requires_payment_method")){
-                        pay.setStatus("canceled");
+                        try {
+                            PaymentIntent paycancel = pay.cancel();
+                        } catch (StripeException e) {
+                            e.printStackTrace();
+                        }
                         for(int i = 0; i < newUser.getSessions().size(); i++){
                             if(newUser.getSessions().get(i).equals(session.getId())){
                                 List<String> nesList;
