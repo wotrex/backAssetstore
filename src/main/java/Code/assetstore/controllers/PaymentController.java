@@ -97,8 +97,6 @@ public class PaymentController {
                     newUser.setItems(items);
                     List<String> ses = newUser.getSessions();
                     ses.remove(i);
-                    newUser.setSessions(ses);
-                    userRepository.deleteById(newUser.getId());
                     userRepository.save(newUser);
                 }
             }
