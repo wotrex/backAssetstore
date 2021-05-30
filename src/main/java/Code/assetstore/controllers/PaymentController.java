@@ -51,63 +51,64 @@ public class PaymentController {
                     .build());
             SessionCreateParams.LineItem item1 = SessionCreateParams.LineItem.builder().setPrice(price.getId()).setQuantity(1L).build();
             SessionCreateParams param = SessionCreateParams.builder().
-                    setCancelUrl("http://assetstore.herokuapp.com/assets").
+                    setCancelUrl("https://assetstore.herokuapp.com/assets").
                     setMode(SessionCreateParams.Mode.PAYMENT).
-                    setSuccessUrl("http://assetstore.herokuapp.com/successPayment").
+                    setSuccessUrl("https://assetstore.herokuapp.com/successPayment").
                     addLineItem(item1).
                     setClientReferenceId(user.get().getId()).
-                    putMetadata("assetId", assetId).
+                    putMetadata("0", assetId).
                     addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD).
                     build();
-            Session session = Session.create(param);
-            User newUser = user.get();
-            List<String> ses = new ArrayList<>();
-            if(newUser.getSessions() != null){
-                ses = newUser.getSessions();
-            }
-            ses.add(session.getId());
-            newUser.setSessions(ses);
-            userRepository.save(newUser);
-            TimerTask timerTask = new TimerTask() {
-
-                @Override
-                public void run() {
-                    PaymentIntent pay = null;
-                    try {
-                        pay = PaymentIntent.retrieve(session.getPaymentIntent());
-                    } catch (StripeException e) {
-                        e.printStackTrace();
-                    }
-                    assert pay != null;
-                    if(pay.getStatus().equals("requires_payment_method")){
-                        try {
-                            PaymentIntent paycancel = pay.cancel();
-                        } catch (StripeException e) {
-                            e.printStackTrace();
-                        }
-                        for(int i = 0; i < newUser.getSessions().size(); i++){
-                            if(newUser.getSessions().get(i).equals(session.getId())){
-                                List<String> nesList;
-                                nesList = newUser.getSessions();
-                                nesList.remove(i);
-                                User user = newUser;
-                                user.setSessions(nesList);
-                                userRepository.save(user);
-                                break;
-                            }
-                        }
-                    }
-                }
-            };
-            Timer timer = new Timer("SessionOverTime");//create a new Timer
-            timer.schedule(timerTask, 3600000);
-            return new MessageResponse(session.getId());
+            return new MessageResponse(sessionCreate(user.get(), param).getId());
         } catch (StripeException e) {
             e.printStackTrace();
             return new MessageResponse("fail");
 
         }
     }
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/sessionGetAll")
+    public MessageResponse createІSessionPayAll(@RequestBody String[] assetsId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> user = userRepository.findByUsername(userDetails.getUsername());
+            Stripe.apiKey = key;
+            List<Assets> assets = new ArrayList<>();
+            for(int i = 0; i < assetsId.length; i++){
+                assets.add(assetService.getAsset(assetsId[i]));
+            }
+            List<SessionCreateParams.LineItem> items = new ArrayList<>();
+            for(int i = 0; i < assets.size(); i++) {
+                Price price = Price.create(PriceCreateParams.builder().setCurrency("uah").
+                        setProductData(PriceCreateParams.ProductData.builder().setName(assets.get(i).getName()).build())
+                        .setUnitAmount(assets.get(i).getCost())
+                        .build());
+                SessionCreateParams.LineItem item1 = SessionCreateParams.LineItem.builder().setPrice(price.getId()).setQuantity(1L).build();
+                items.add(item1);
+            }
+            Map<String, String> dataId = new HashMap<String, String>();
+            for(int i = 0; i < assetsId.length; i++){
+                Integer y = new Integer(i);
+                dataId.put(y.toString(), assetsId[i]);
+            }
+            SessionCreateParams param = SessionCreateParams.builder().
+                    setCancelUrl("https://assetstore.herokuapp.com/assets").
+                    setMode(SessionCreateParams.Mode.PAYMENT).
+                    setSuccessUrl("https://assetstore.herokuapp.com/successPayment").
+                    addAllLineItem(items).
+                    setClientReferenceId(user.get().getId()).
+                    putAllMetadata(dataId).
+                    addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD).
+                    build();
+            return new MessageResponse(sessionCreate(user.get(), param).getId());
+        } catch (StripeException e) {
+            e.printStackTrace();
+            return new MessageResponse("fail");
+
+        }
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/success")
     public void successSession() throws StripeException {
@@ -123,10 +124,36 @@ public class PaymentController {
                     List<String> items = new ArrayList<>();
                     if (newUser.getItems() != null) {
                         items = newUser.getItems();
-                        if(!newUser.getItems().contains(session.getMetadata().get("assetId"))) {
-                            items.add(session.getMetadata().get("assetId"));
+                        if(session.getMetadata().size() == 1) {
+                            if (!newUser.getItems().contains(session.getMetadata().get("0"))) {
+                                items.add(session.getMetadata().get("0"));
+                            }
+                        }else {
+                            for(int ind = 0; ind < session.getMetadata().size(); ind++){
+                                Integer x = ind;
+                                if (!newUser.getItems().contains(session.getMetadata().get(x.toString()))) {
+                                    items.add(session.getMetadata().get(x.toString()));
+                                }
+                            }
                         }
                     }
+                    List<String> cart = new ArrayList<>();
+                    if (newUser.getCart() != null) {
+                        cart = newUser.getCart();
+                        if(session.getMetadata().size() == 1) {
+                            if (newUser.getCart().contains(session.getMetadata().get("0"))) {
+                                cart.remove(session.getMetadata().get("0"));
+                            }
+                        }else{
+                            for(int ind = 0; ind < session.getMetadata().size(); ind++){
+                                Integer x = ind;
+                                if (newUser.getCart().contains(session.getMetadata().get(x.toString()))) {
+                                    cart.remove(session.getMetadata().get(x.toString()));
+                                }
+                            }
+                        }
+                    }
+                    newUser.setCart(cart);
                     newUser.setItems(items);
                     List<String> ses = newUser.getSessions();
                     ses.remove(i);
@@ -134,6 +161,52 @@ public class PaymentController {
                 }
             }
         }
+    }
+
+    public Session sessionCreate(User user, SessionCreateParams param) throws StripeException {
+        Session session = Session.create(param);
+        User newUser = user;
+        List<String> ses = new ArrayList<>();
+        if(newUser.getSessions() != null){
+            ses = newUser.getSessions();
+        }
+        ses.add(session.getId());
+        newUser.setSessions(ses);
+        userRepository.save(newUser);
+        TimerTask timerTask = new TimerTask() {
+
+            @Override
+            public void run() {
+                PaymentIntent pay = null;
+                try {
+                    pay = PaymentIntent.retrieve(session.getPaymentIntent());
+                } catch (StripeException e) {
+                    e.printStackTrace();
+                }
+                assert pay != null;
+                if(pay.getStatus().equals("requires_payment_method")){
+                    try {
+                        PaymentIntent paycancel = pay.cancel();
+                    } catch (StripeException e) {
+                        e.printStackTrace();
+                    }
+                    for(int i = 0; i < newUser.getSessions().size(); i++){
+                        if(newUser.getSessions().get(i).equals(session.getId())){
+                            List<String> nesList;
+                            nesList = newUser.getSessions();
+                            nesList.remove(i);
+                            User user = newUser;
+                            user.setSessions(nesList);
+                            userRepository.save(user);
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+        Timer timer = new Timer("SessionOverTime");//create a new Timer
+        timer.schedule(timerTask, 1200000);
+        return session;
     }
 
 }

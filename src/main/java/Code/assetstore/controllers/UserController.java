@@ -51,7 +51,6 @@ public class UserController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             userOld = userRepository.findById(userDetails.getId());
-            System.out.print("yse");
         }else {
             userOld = userRepository.findById(userId);
         }
@@ -92,20 +91,4 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/userItems")
-    public List<Assets> getAllAssets(){
-        List<Assets> getassets = new ArrayList<>();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        Optional<User> user = userRepository.findByUsername(userDetails.getUsername());
-        if(user.get().getItems().isEmpty()){
-            return null;
-        }
-        for(int i = 0; i < user.get().getItems().size(); i++){
-            getassets.add(assetService.getAsset(user.get().getItems().get(i)));
-        }
-        return getassets;
-
-    }
 }

@@ -109,7 +109,6 @@ public class AuthController {
         user.setSessions(empty);
         user.setCart(empty);
         userRepository.save(user);
-
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }
