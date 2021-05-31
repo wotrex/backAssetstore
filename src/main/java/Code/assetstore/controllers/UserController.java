@@ -43,7 +43,7 @@ public class UserController {
         return user;
     }
 
-    @GetMapping("/getById{userId}")
+    @GetMapping("/getById/{userId}")
     public Optional<User> getUserById(@PathVariable(name = "userId") String userId){
         Optional<User> user = userRepository.findById(userId);
         return user;
