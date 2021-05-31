@@ -43,6 +43,12 @@ public class UserController {
         return user;
     }
 
+    @GetMapping("/getById{userId}")
+    public Optional<User> getUserById(@PathVariable(name = "userId") String userId){
+        Optional<User> user = userRepository.findById(userId);
+        return user;
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PatchMapping("/update/{userId}")
     public ResponseEntity<?> getUserByToken(@RequestBody EditUserRequest user, @PathVariable(name = "userId") String userId){
