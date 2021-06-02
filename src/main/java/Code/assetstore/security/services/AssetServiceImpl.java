@@ -68,7 +68,7 @@ public class AssetServiceImpl implements AssetService {
             metaData.put("type", file.getOriginalFilename().split("\\.")[1]);
             String name = assets.getName();
             Types type = new Types(file.getOriginalFilename().split("\\.")[1], file.getContentType());
-            if (asset.getName() != null){
+            if (!asset.getName().equals("")){
                 name = asset.getName();
             }
             ObjectId id = gridFsTemplate.store(
@@ -79,11 +79,14 @@ public class AssetServiceImpl implements AssetService {
         if(!img.isEmpty()){
             gridFsTemplate.delete(new Query(Criteria.where("_id").is(assets.getImg())));
             DBObject metaData = new BasicDBObject();
-            metaData.put("type", file.getOriginalFilename().split("\\.")[1]);
+            metaData.put("type", img.getOriginalFilename().split("\\.")[1]);
             String name = assets.getName();
-            ObjectId id = gridFsTemplate.store(
-                    file.getInputStream(), name, file.getContentType(), metaData);
-            assets.setImg(id.toString());
+            if (!asset.getName().equals("")){
+                name = asset.getName();
+            }
+            ObjectId idimg = gridFsTemplate.store(
+                    img.getInputStream(), name, img.getContentType(), metaData);
+            assets.setImg(idimg.toString());
         }
         assets.setId(assetId);
         if(!asset.getCategory().isEmpty()){
@@ -129,6 +132,8 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public void deleteAsset(String assetId) {
         assetRepository.deleteById(assetId);
+        gridFsTemplate.delete(new Query(Criteria.where("_id").is(assetId)));
+
     }
 
     @Override

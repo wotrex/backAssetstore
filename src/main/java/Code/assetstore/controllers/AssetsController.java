@@ -55,6 +55,7 @@ public class AssetsController {
                       @RequestParam("file") MultipartFile file,
                       @RequestParam("img") MultipartFile img) throws IOException {
         /*Set<String> StrCategory = assets.getCategory();*/
+        System.out.print(description);
         Set<String> StrCategory = category;
         Set<Category> categories = new HashSet<>();
 
@@ -101,9 +102,8 @@ public class AssetsController {
                          @RequestParam("description") String description,
                          @RequestParam(name = "cost", defaultValue = "0") int cost,
                          @RequestParam("category") Set<String> category,
-                         @RequestParam(value = "file") MultipartFile img,
-                         @RequestParam("img") MultipartFile file) throws IOException{
-        System.out.print(name + "\n" + cost + "\n" + category + "\n" +file.toString());
+                         @RequestParam("file") MultipartFile file,
+                         @RequestParam("img") MultipartFile img) throws IOException{
         Assets assets = new Assets();
         assets.setName(name);
         assets.setDescription(description);
