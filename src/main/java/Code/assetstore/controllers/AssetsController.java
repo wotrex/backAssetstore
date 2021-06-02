@@ -50,8 +50,10 @@ public class AssetsController {
     @PostMapping("/add")
 /*    public Assets add(@RequestBody Assets assets)*/
     public Assets add(@RequestParam("name") String name, @RequestParam("cost") long cost,
+                      @RequestParam("description") String description,
                       @RequestParam("category") Set<String> category,
-                      @RequestParam("file") MultipartFile file) throws IOException {
+                      @RequestParam("file") MultipartFile file,
+                      @RequestParam("img") MultipartFile img) throws IOException {
         /*Set<String> StrCategory = assets.getCategory();*/
         Set<String> StrCategory = category;
         Set<Category> categories = new HashSet<>();
@@ -89,21 +91,25 @@ public class AssetsController {
         assets.setName(name);
         assets.setCost(cost);
         assets.setUser(user);
+        assets.setDescription(description);
         assets.setCategories(categories);
-        return assetService.add(assets, file);
+        return assetService.add(assets, file, img);
     }
     @PatchMapping("/update/{assetId}")
     public Assets update(@PathVariable(name = "assetId") String assetId,
                          @RequestParam("name") String name,
+                         @RequestParam("description") String description,
                          @RequestParam(name = "cost", defaultValue = "0") int cost,
                          @RequestParam("category") Set<String> category,
-                         @RequestParam("file") MultipartFile file) throws IOException{
+                         @RequestParam(value = "file") MultipartFile img,
+                         @RequestParam("img") MultipartFile file) throws IOException{
         System.out.print(name + "\n" + cost + "\n" + category + "\n" +file.toString());
         Assets assets = new Assets();
         assets.setName(name);
+        assets.setDescription(description);
         assets.setCost(cost);
         assets.setCategory(category);
-        return assetService.update(assets,assetId,file);
+        return assetService.update(assets,assetId,file,img );
     }
     @GetMapping("/all")
     public List<Assets> getAllAssets(){

@@ -14,11 +14,14 @@ public class Assets {
 
     private String name;
 
+    private String description;
     private long cost;
     @DBRef
     private Set<User> user;
 
     private String files;
+
+    private String img;
 
     private Types filetype;
 
@@ -48,6 +51,14 @@ public class Assets {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription(){
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
     public long getCost() {
         return cost;
@@ -89,6 +100,14 @@ public class Assets {
 
     public void setFiles(String files) {
         this.files = files;
+    }
+
+    public String getImg(){
+        return img;
+    }
+
+    public void setImg(String img) {
+        this.img = img;
     }
 
 }

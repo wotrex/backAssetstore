@@ -40,19 +40,24 @@ public class AssetServiceImpl implements AssetService {
     private GridFsOperations operations;
 
     @Override
-    public Assets add(Assets asset, MultipartFile file) throws IOException {
+    public Assets add(Assets asset, MultipartFile file, MultipartFile img) throws IOException {
         DBObject metaData = new BasicDBObject();
         metaData.put("type", file.getOriginalFilename().split("\\.")[1]);
         ObjectId id = gridFsTemplate.store(
                 file.getInputStream(), asset.getName(), file.getContentType(), metaData);
         asset.setFiles(id.toString());
+        DBObject metaDataImg = new BasicDBObject();
+        metaDataImg.put("type", img.getOriginalFilename().split("\\.")[1]);
+        ObjectId imgId = gridFsTemplate.store(
+                img.getInputStream(), asset.getName(), img.getContentType(), metaDataImg);
+        asset.setImg(imgId.toString());
         Types type = new Types(file.getOriginalFilename().split("\\.")[1], file.getContentType());
         asset.setType(type);
         return assetRepository.save(asset);
     }
 
     @Override
-    public Assets update(Assets asset, String assetId, MultipartFile file) throws IOException  {
+    public Assets update(Assets asset, String assetId, MultipartFile file, MultipartFile img ) throws IOException  {
         Assets assets = assetRepository.findById(assetId).orElse(null);
         if (assets == null){
             return assets;
@@ -70,6 +75,15 @@ public class AssetServiceImpl implements AssetService {
                     file.getInputStream(), name, file.getContentType(), metaData);
             assets.setFiles(id.toString());
             assets.setType(type);
+        }
+        if(!img.isEmpty()){
+            gridFsTemplate.delete(new Query(Criteria.where("_id").is(assets.getImg())));
+            DBObject metaData = new BasicDBObject();
+            metaData.put("type", file.getOriginalFilename().split("\\.")[1]);
+            String name = assets.getName();
+            ObjectId id = gridFsTemplate.store(
+                    file.getInputStream(), name, file.getContentType(), metaData);
+            assets.setImg(id.toString());
         }
         assets.setId(assetId);
         if(!asset.getCategory().isEmpty()){

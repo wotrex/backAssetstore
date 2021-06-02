@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AssetService {
-    Assets add(Assets asset, MultipartFile file) throws IOException;
-    Assets update(Assets asset, String assetId, MultipartFile file) throws IOException;
+    Assets add(Assets asset, MultipartFile file, MultipartFile img) throws IOException;
+    Assets update(Assets asset, String assetId, MultipartFile file, MultipartFile img) throws IOException;
     List<Assets> getAllAssets();
     void deleteAsset(String assetId);
     Assets getAsset(String assetId);
