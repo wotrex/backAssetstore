@@ -157,7 +157,14 @@ public class PaymentController {
                     newUser.setItems(items);
                     List<String> ses = newUser.getSessions();
                     ses.remove(i);
+                    newUser.setSessions(ses);
                     userRepository.save(newUser);
+                }else if(session.getPaymentStatus().equals("canceled")){
+                    List<String> ses = newUser.getSessions();
+                    ses.remove(i);
+                    newUser.setSessions(ses);
+                    userRepository.save(newUser);
+
                 }
             }
         }
