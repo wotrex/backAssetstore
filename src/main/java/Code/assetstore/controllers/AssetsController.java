@@ -153,4 +153,9 @@ public class AssetsController {
         }
         return result;
     }
+
+    @GetMapping("/allcategories")
+    public List<Category> getAllCategory(){
+        return categoryRepository.findAll();
+    }
 }
