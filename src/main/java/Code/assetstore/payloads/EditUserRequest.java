@@ -1,10 +1,8 @@
 package Code.assetstore.payloads;
 
-import Code.assetstore.models.Assets;
-import Code.assetstore.models.Role;
 
 import java.util.List;
-import java.util.Set;
+
 
 public class EditUserRequest {
     private String username;

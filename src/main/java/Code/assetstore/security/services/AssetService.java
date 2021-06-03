@@ -5,8 +5,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-
 public interface AssetService {
     Assets add(Assets asset, MultipartFile file, MultipartFile img) throws IOException;
     Assets update(Assets asset, String assetId, MultipartFile file, MultipartFile img) throws IOException;
